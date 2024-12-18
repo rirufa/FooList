@@ -122,12 +122,13 @@ namespace FooProject.Collection
 
         public List()
         {
-            this.collection = new BPTree<RangeKey, RangeItem<T>>();
+            this.collection = new BPTree<RangeKey, RangeItem<T>>(null, MaxCapacity, MaxCapacity);
         }
 
         public List(int eachItemCapacity) : this()
         {
             MaxCapacity = eachItemCapacity;
+            this.collection = new BPTree<RangeKey, RangeItem<T>>(null, eachItemCapacity, eachItemCapacity);
         }
 
         public T this[int index] {
@@ -343,7 +344,7 @@ namespace FooProject.Collection
             int removeLeftCount = count;
             while(true)
             {
-                if (removeIndex >= index + count)
+                if (removeIndex >= index + count - 1)
                     break;
 
                 RangeKey range;
@@ -360,6 +361,7 @@ namespace FooProject.Collection
                 {
                     relativeIndex = removeIndex - range.start;
                     relativeCount = target.list.Count - relativeIndex;
+                    System.Diagnostics.Debug.Assert(relativeCount > 0);
                     //部分的に削除したのでずらさないといけない
                     if (relativeCount != target.list.Count)
                         range.length -= relativeCount;
@@ -367,10 +369,21 @@ namespace FooProject.Collection
                 else
                 {
                     relativeIndex = removeIndex - range.start;
-                    relativeCount = removeLeftCount;
-                    //部分的に削除したのでずらさないといけない
-                    range.start += removeLeftCount;
-                    range.length -= relativeCount;
+                    //TODO:末端から1つだけ消し、removeLeftCountが3あるケースで落ちる
+                    if (relativeIndex + removeLeftCount > target.list.Count)
+                    {
+                        relativeCount = target.list.Count - relativeIndex;
+                        System.Diagnostics.Debug.Assert(relativeCount > 0);
+                        //部分的に削除したのでずらさないといけない
+                        range.length -= relativeCount;
+                    }
+                    else
+                    {
+                        relativeCount = removeLeftCount;
+                        //部分的に削除したのでずらさないといけない
+                        range.start += removeLeftCount;
+                        range.length -= relativeCount;
+                    }
                 }
 
                 if (relativeCount > 0)

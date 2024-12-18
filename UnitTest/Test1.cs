@@ -142,5 +142,16 @@ namespace UnitTest
             var output = String.Concat<char>(buf);
             Assert.AreEqual("012346789", output);
         }
+
+        [TestMethod]
+        public void RemoveAndInsertTest()
+        {
+            var buf = new FooProject.Collection.List<char>();
+            buf.AddRange("this is a pen\n");
+            buf.RemoveRange(10, 3);
+            buf.InsertRange(10, "ratking");
+            var output = String.Concat<char>(buf);
+            Assert.AreEqual("this is a ratking\n", output);
+        }
     }
 }
