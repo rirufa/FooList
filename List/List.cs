@@ -235,7 +235,7 @@ namespace FooProject.Collection
         public void CopyTo(T[] array, int arrayIndex)
         {
             int targetArrayIndex = arrayIndex;
-            IEnumerable<(RangeKey, RangeItem<T>)> list = this.collection.AsPairEnumerable(new RangeKey() { start = arrayIndex, length = 1 });
+            IEnumerable<(RangeKey, RangeItem<T>)> list = this.collection.AsPairEnumerable(new RangeKey() { start = 0, length = 1 });
             foreach (var kv in list)
             {
                 foreach (var item in kv.Item2.list)

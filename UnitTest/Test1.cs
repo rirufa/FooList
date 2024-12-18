@@ -8,7 +8,7 @@ namespace UnitTest
     public sealed class ListTest
     {
         [TestMethod]
-        public void GetTest()
+        public void TryGetItemTest()
         {
             var buf = new FooProject.Collection.List<char>(5);
             buf.AddRange("0123456789");
@@ -42,7 +42,37 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void TryGetTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.AddRange("0123456789");
+            char result;
+            buf.TryGet(0, out result);
+            Assert.AreEqual('0', result);
+
+            buf.TryGet(4, out result);
+            Assert.AreEqual('4', result);
+
+            buf.TryGet(5, out result);
+            Assert.AreEqual('5', result);
+        }
+
+        [TestMethod]
         public void AddTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.Add('0');
+            buf.Add('1');
+            buf.Add('2');
+            buf.Add('3');
+            buf.Add('4');
+            buf.Add('5');
+            var output = String.Concat<char>(buf);
+            Assert.AreEqual("012345", output);
+        }
+
+        [TestMethod]
+        public void AddRangeTest()
         {
             var buf = new FooProject.Collection.List<char>(5);
             buf.AddRange("0123456789");
@@ -51,7 +81,49 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void ContainsTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.AddRange("0123456789");
+            var result = buf.Contains('0');
+            Assert.AreEqual(true, result);
+            result = buf.Contains('a');
+            Assert.AreEqual(false, result);
+        }
+
+        [TestMethod]
+        public void CopyToTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            char[] result = new char[6];
+            buf.AddRange("012345");
+            buf.CopyTo(result, 0);
+            Assert.AreEqual("012345", String.Concat<char>(result));
+        }
+
+        [TestMethod]
+        public void IndexTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.AddRange("0123456789");
+            var result = buf.IndexOf('0');
+            Assert.AreEqual(0, result);
+            result = buf.IndexOf('a');
+            Assert.AreEqual(-1, result);
+        }
+
+        [TestMethod]
         public void InsertTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.AddRange("0123456789");
+            buf.Insert(4, 'a');
+            var output = String.Concat<char>(buf);
+            Assert.AreEqual("0123a456789", output);
+        }
+
+        [TestMethod]
+        public void InserRangetTest()
         {
             var buf = new FooProject.Collection.List<char>(5);
             buf.AddRange("0123456789");
