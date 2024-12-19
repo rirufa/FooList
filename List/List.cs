@@ -286,23 +286,33 @@ namespace FooProject.Collection
             RangeKey range;
             RangeItem<T> target;
             T[] overflowItems = Array.Empty<T>();
+            int itemsCount = items.Count();
+
+            this.UpdateIndex(insertIndex, itemsCount);
 
             var result = this.TryGetItem(index, out range, out target);
             if(result == true)
             {
                 int relativeIndex = index - range.start;
                 int relativeCount = target.list.Count - relativeIndex;
-                overflowItems = new T[relativeCount];
-                target.list.CopyTo(relativeIndex, overflowItems, 0, relativeCount);
-                target.list.RemoveRange(relativeIndex, relativeCount);
-                target.list.AddRange(items.Take(relativeCount));
-                insertIndex = index + relativeCount;
-                insertCount = relativeCount;
+                if(target.list.Count+ itemsCount < List<T>.MaxCapacity)
+                {
+                    target.list.InsertRange(relativeIndex, items);
+                    range.length += itemsCount;
+                    insertIndex = index + itemsCount;
+                    insertCount = itemsCount;
+                }
+                else
+                {
+                    overflowItems = new T[relativeCount];
+                    target.list.CopyTo(relativeIndex, overflowItems, 0, relativeCount);
+                    target.list.RemoveRange(relativeIndex, relativeCount);
+                    target.list.AddRange(items.Take(relativeCount));
+                    insertIndex = index + relativeCount;
+                    insertCount = relativeCount;
+                }
             }
 
-            // 面倒なのでインデックスを事前に調整しておく
-            int itemsCount = items.Count();
-            this.UpdateIndex(insertIndex, itemsCount);
 
             var skippedItems = items.Skip(insertCount);
             foreach (var sliced_items in skippedItems.Concat<T>(overflowItems).Chunk(List<T>.MaxCapacity))
@@ -340,11 +350,15 @@ namespace FooProject.Collection
 
         public void RemoveRange(int index,int count)
         {
+            if (count < 1)
+                return;
+
             int removeIndex = index;
             int removeLeftCount = count;
+            int removeEnd = removeIndex + count - 1;
             while(true)
             {
-                if (removeIndex >= index + count - 1)
+                if (removeIndex >= removeEnd)
                     break;
 
                 RangeKey range;
@@ -357,38 +371,24 @@ namespace FooProject.Collection
 
                 int relativeIndex;
                 int relativeCount;
-                if(target.list.Count <= removeLeftCount)
+                if(removeIndex >= range.start && removeEnd < range.end)
                 {
                     relativeIndex = removeIndex - range.start;
+                    relativeCount = removeEnd - removeIndex + 1;
+                    target.list.RemoveRange(relativeIndex, relativeCount);
+                    range.length -= relativeCount;
+                }else if(removeEnd >= range.end){
+                    relativeIndex = removeIndex - range.start;
                     relativeCount = target.list.Count - relativeIndex;
-                    System.Diagnostics.Debug.Assert(relativeCount > 0);
-                    //部分的に削除したのでずらさないといけない
-                    if (relativeCount != target.list.Count)
-                        range.length -= relativeCount;
+                    target.list.RemoveRange(relativeIndex, relativeCount);
+                    range.length -= relativeCount;
                 }
                 else
                 {
-                    relativeIndex = removeIndex - range.start;
-                    //TODO:末端から1つだけ消し、removeLeftCountが3あるケースで落ちる
-                    if (relativeIndex + removeLeftCount > target.list.Count)
-                    {
-                        relativeCount = target.list.Count - relativeIndex;
-                        System.Diagnostics.Debug.Assert(relativeCount > 0);
-                        //部分的に削除したのでずらさないといけない
-                        range.length -= relativeCount;
-                    }
-                    else
-                    {
-                        relativeCount = removeLeftCount;
-                        //部分的に削除したのでずらさないといけない
-                        range.start += removeLeftCount;
-                        range.length -= relativeCount;
-                    }
-                }
-
-                if (relativeCount > 0)
-                {
+                    relativeIndex = range.start;
+                    relativeCount = count - relativeIndex;
                     target.list.RemoveRange(relativeIndex, relativeCount);
+                    range.length -= relativeCount;
                 }
 
                 if (target.list.Count == 0)
@@ -411,7 +411,8 @@ namespace FooProject.Collection
             foreach (var item in list)
             {
                 var key = item.Item1;
-                key.start += updateCount;
+                if(key.start > startIndex)
+                    key.start += updateCount;
             }
             SetDirtyFlag();
         }
