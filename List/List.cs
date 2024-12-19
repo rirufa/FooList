@@ -285,12 +285,18 @@ namespace FooProject.Collection
             int insertCount = 0;
             RangeKey range;
             RangeItem<T> target;
-            T[] overflowItems = Array.Empty<T>();
+            List<T> overflowItems = new List<T>();
             int itemsCount = items.Count();
 
-            this.UpdateIndex(insertIndex, itemsCount);
+            this.UpdateIndex(insertIndex, itemsCount, false);
 
             var result = this.TryGetItem(index, out range, out target);
+            if(result == false)
+            {
+                result = this.TryGetItem(index -1, out range, out target );
+                if (result == false && this.collection.Count >0)
+                    throw new KeyNotFoundException("近くのキーがありません");
+            }
             if(result == true)
             {
                 int relativeIndex = index - range.start;
@@ -304,8 +310,7 @@ namespace FooProject.Collection
                 }
                 else
                 {
-                    overflowItems = new T[relativeCount];
-                    target.list.CopyTo(relativeIndex, overflowItems, 0, relativeCount);
+                    overflowItems.AddRange(target.list.GetRange(relativeIndex,relativeCount));
                     target.list.RemoveRange(relativeIndex, relativeCount);
                     target.list.AddRange(items.Take(relativeCount));
                     insertIndex = index + relativeCount;
@@ -313,6 +318,10 @@ namespace FooProject.Collection
                 }
             }
 
+            if(overflowItems.Count > 0)
+            {
+                this.UpdateIndex(insertIndex, overflowItems.Count, false);
+            }
 
             var skippedItems = items.Skip(insertCount);
             foreach (var sliced_items in skippedItems.Concat<T>(overflowItems).Chunk(List<T>.MaxCapacity))
@@ -354,11 +363,11 @@ namespace FooProject.Collection
                 return;
 
             int removeIndex = index;
-            int removeLeftCount = count;
             int removeEnd = removeIndex + count - 1;
+            int previousNodeCountDelta = 0;
             while(true)
             {
-                if (removeIndex >= removeEnd)
+                if (removeIndex > removeEnd)
                     break;
 
                 RangeKey range;
@@ -390,6 +399,8 @@ namespace FooProject.Collection
                     target.list.RemoveRange(relativeIndex, relativeCount);
                     range.length -= relativeCount;
                 }
+                if (previousNodeCountDelta > 0)
+                    range.start -= previousNodeCountDelta;
 
                 if (target.list.Count == 0)
                 {
@@ -398,21 +409,33 @@ namespace FooProject.Collection
                 }
 
                 removeIndex += relativeCount;
-                removeLeftCount -= relativeCount;
+                previousNodeCountDelta += relativeCount;
             }
 
             //残りのインデックスを調整する
-            UpdateIndex(index, -count);
+            UpdateIndex(removeIndex, -count, false);
         }
 
-        void UpdateIndex(int startIndex,int updateCount)
+        void UpdateIndex(int startIndex,int updateCount,bool includeStartNode = true)
         {
+
             IEnumerable<(RangeKey, RangeItem<T>)> list = this.collection.AsPairEnumerable(new RangeKey() { start = startIndex, length = 1 });
-            foreach (var item in list)
+            if (includeStartNode)
             {
-                var key = item.Item1;
-                if(key.start > startIndex)
+                foreach (var item in list)
+                {
+                    var key = item.Item1;
                     key.start += updateCount;
+                }
+            }
+            else
+            {
+                foreach (var item in list)
+                {
+                    var key = item.Item1;
+                    if (key.start > startIndex)
+                        key.start += updateCount;
+                }
             }
             SetDirtyFlag();
         }

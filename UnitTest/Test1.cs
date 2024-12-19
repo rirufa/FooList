@@ -146,12 +146,19 @@ namespace UnitTest
         [TestMethod]
         public void RemoveAndInsertTest()
         {
-            var buf = new FooProject.Collection.List<char>();
-            buf.AddRange("this is a pen\n");
+            var buf = new FooProject.Collection.List<char>(13);
+            buf.AddRange("this is ");
+            buf.AddRange("a pen\n");
+            buf.AddRange("this is ");
+            buf.AddRange("a pen\n");
             buf.RemoveRange(10, 3);
             buf.InsertRange(10, "ratking");
             var output = String.Concat<char>(buf);
-            Assert.AreEqual("this is a ratking\n", output);
+            Assert.AreEqual("this is a ratking\nthis is a pen\n", output);
+            buf.RemoveRange(5, 4);
+            buf.InsertRange(5, "is to be");
+            output = String.Concat<char>(buf);
+            Assert.AreEqual("this is to be ratking\nthis is a pen\n", output);
         }
     }
 }
