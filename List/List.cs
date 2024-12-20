@@ -25,7 +25,10 @@ namespace FooProject.Collection
             set
             {
                 _length = value;
-                this.end = this.start + this.length - 1;
+                if (_length > 0)
+                    this.end = this.start + this.length - 1;
+                else
+                    this.end = this.start;
             }
         }
 
@@ -287,7 +290,6 @@ namespace FooProject.Collection
             RangeItem<T> target;
             System.Collections.Generic.List<T> overflowItems = new System.Collections.Generic.List<T>();
             int itemsCount = items.Count();
-            System.Collections.Generic.List<T> itemsAndOverflorItems = new System.Collections.Generic.List<T>(items);
 
             this.UpdateIndex(insertIndex, itemsCount, false);
 
@@ -301,23 +303,31 @@ namespace FooProject.Collection
             if(result == true)
             {
                 int relativeIndex = index - range.start;
-                int relativeCount = target.list.Count - relativeIndex;
                 if(target.list.Count+ itemsCount < List<T>.MaxCapacity)
                 {
                     target.list.InsertRange(relativeIndex, items);
                     range.length += itemsCount;
                     insertIndex = index + itemsCount;
                     insertCount = itemsCount;
-                    itemsAndOverflorItems = null;
                 }
                 else
                 {
+                    int relativeCount = target.list.Count - relativeIndex;
                     overflowItems.AddRange(target.list.GetRange(relativeIndex,relativeCount));
                     target.list.RemoveRange(relativeIndex, relativeCount);
-                    itemsAndOverflorItems.AddRange(overflowItems);
-                    target.list.AddRange(itemsAndOverflorItems.Take(relativeCount));
-                    insertIndex = index + relativeCount;
-                    insertCount = relativeCount;
+                    range.length -= overflowItems.Count;
+                    if (target.list.Count + itemsCount < List<T>.MaxCapacity)
+                    {
+                        target.list.AddRange(items);
+                        range.length += itemsCount;
+                        insertIndex = index + itemsCount;
+                        insertCount = itemsCount;
+                    }
+                    if (target.list.Count == 0)
+                    {
+                        RangeItem<T> deletedItems;
+                        this.collection.Remove(range, out deletedItems);
+                    }
                 }
             }
 
@@ -326,17 +336,14 @@ namespace FooProject.Collection
                 this.UpdateIndex(insertIndex, overflowItems.Count, false);
             }
 
-            if(itemsAndOverflorItems != null)
+            foreach (var sliced_items in items.Concat(overflowItems).Skip(insertCount).Chunk(List<T>.MaxCapacity))
             {
-                foreach (var sliced_items in itemsAndOverflorItems.Skip(insertCount).Chunk(List<T>.MaxCapacity))
-                {
-                    var newItemCount = sliced_items.Length;
-                    var newKey = new RangeKey(insertIndex, newItemCount);
-                    var newitem = new RangeItem<T>() { list = new System.Collections.Generic.List<T>(sliced_items) };
-                    this.collection.Add(newKey, newitem);
-                    insertIndex += newItemCount;
-                    insertCount += newItemCount;
-                }
+                var newItemCount = sliced_items.Length;
+                var newKey = new RangeKey(insertIndex, newItemCount);
+                var newitem = new RangeItem<T>() { list = new System.Collections.Generic.List<T>(sliced_items) };
+                this.collection.Add(newKey, newitem);
+                insertIndex += newItemCount;
+                insertCount += newItemCount;
             }
         }
 
