@@ -45,6 +45,7 @@ namespace UnitTest
         public void CountTest()
         {
             var buf = new FooProject.Collection.List<char>(5);
+            Assert.AreEqual(0, buf.Count);
             buf.AddRange("0123456789");
             Assert.AreEqual(10, buf.Count);
         }
