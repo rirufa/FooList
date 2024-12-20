@@ -288,8 +288,7 @@ namespace FooProject.Collection
                 int headIndex = key.start;
                 if (headIndex != nextIndex)
                 {
-                    Debug.WriteLine("Invaild Line");
-                    System.Diagnostics.Debugger.Break();
+                    throw new InvalidDataException("Invaild Range");
                 }
                 nextIndex = headIndex + key.length;
             }
