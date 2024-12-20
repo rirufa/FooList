@@ -161,8 +161,8 @@ namespace FooProject.Collection
                 {
                     _Count = 0;
                     var list = this;
-                    foreach (var item in list)
-                        _Count++;
+                    foreach (var item in this.collection)
+                        _Count += item.list.Count;
                 }
                 return _Count;
             }

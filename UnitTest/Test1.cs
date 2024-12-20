@@ -42,6 +42,14 @@ namespace UnitTest
         }
 
         [TestMethod]
+        public void CountTest()
+        {
+            var buf = new FooProject.Collection.List<char>(5);
+            buf.AddRange("0123456789");
+            Assert.AreEqual(10, buf.Count);
+        }
+
+        [TestMethod]
         public void TryGetTest()
         {
             var buf = new FooProject.Collection.List<char>(5);
