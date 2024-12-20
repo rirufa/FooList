@@ -9,9 +9,9 @@ Console.WriteLine("benchmark start");
 
 Stopwatch sw = Stopwatch.StartNew();
 var buf = new StringBuffer();
-for(int i = 0; i< 10000; i++)
+for(int i = 0; i< 100000; i++)
 {
-    var insertStr = "this is a pen\n";
+    var insertStr = "this is a pen.this is a pen.this is a pen.this is a pen.this is a pen.this is a pen.this is a pen.\n";
     buf.Replace(buf.Length, 0,insertStr,insertStr.Length);
 }
 sw.Stop();
