@@ -349,11 +349,6 @@ namespace FooProject.Collection
                 }
             }
 
-            if(overflowItems.Count > 0)
-            {
-                this.UpdateIndex(insertIndex, overflowItems.Count, false);
-            }
-
             foreach (var sliced_items in items.Concat(overflowItems).Skip(insertCount).Chunk(List<T>.MaxCapacity))
             {
                 var newItemCount = sliced_items.Length;
