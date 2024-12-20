@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -277,6 +278,24 @@ namespace FooProject.Collection
             return -1;
         }
 
+        private void Validate()
+        {
+#if DEBUG
+            int nextIndex = 0;
+            foreach(var item in this.collection.AsPairEnumerable())
+            {
+                var key = item.Item1;
+                int headIndex = key.start;
+                if (headIndex != nextIndex)
+                {
+                    Debug.WriteLine("Invaild Line");
+                    System.Diagnostics.Debugger.Break();
+                }
+                nextIndex = headIndex + key.length;
+            }
+#endif
+        }
+
         public void Insert(int index, T item)
         {
             this.InsertRange(index, new T[1] { item} );
@@ -345,6 +364,8 @@ namespace FooProject.Collection
                 insertIndex += newItemCount;
                 insertCount += newItemCount;
             }
+
+            this.Validate();
         }
 
         public bool Remove(T item)
@@ -426,6 +447,8 @@ namespace FooProject.Collection
 
             //残りのインデックスを調整する
             UpdateIndex(removeIndex, -count, false);
+
+            this.Validate();
         }
 
         void UpdateIndex(int startIndex,int updateCount,bool includeStartNode = true)
