@@ -160,9 +160,11 @@ namespace FooProject.Collection
                 if (_Count == DirtyFlag)
                 {
                     _Count = 0;
-                    var list = this;
-                    foreach (var item in this.collection)
-                        _Count += item.list.Count;
+                    if(this.collection.Count != 0)
+                    {
+                        var lastKey = this.collection.Last.Item1;
+                        _Count += lastKey.start + lastKey.length;
+                    }
                 }
                 return _Count;
             }
