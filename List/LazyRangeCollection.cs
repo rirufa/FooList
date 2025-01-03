@@ -423,11 +423,12 @@ namespace FooEditEngine
 
         public bool Remove(T item)
         {
-            return this.collection.Remove(item);
+            return this.RemoveOrdered(item);
         }
 
         public bool RemoveOrdered(T item)
         {
+            this.CommiteChange();
             int startRow, outLeft, outRight;
             startRow = this.BinarySearchCore(item.start, 0, this.collection.Count - 1, out outLeft, out outRight);
             if (startRow < 0)
@@ -439,6 +440,7 @@ namespace FooEditEngine
 
         public T Replace(int startRow, T item)
         {
+            this.CommiteChange();
             var list = new System.Collections.Generic.List<T>() { item };
             int listCount = list.Sum<T>((i) => i.length);
             T removedItem = this.collection[startRow];
@@ -449,7 +451,9 @@ namespace FooEditEngine
 
         public void PushFirst(T item)
         {
+            this.CommiteChange();
             this.collection.Insert(0, item);
+            this.UpdateStartIndex(item.length, 0);
         }
         public void PushLast(T item)
         {
@@ -459,6 +463,7 @@ namespace FooEditEngine
         {
             T item = this.collection[0];
             this.collection.RemoveAt(0);
+            this.UpdateStartIndex(-item.length, 0);
             return item;
         }
 
@@ -473,12 +478,14 @@ namespace FooEditEngine
         {
             T popedItem = this.PopFirst();
             this.collection.Insert(index, item);
+            this.UpdateStartIndex(item.length, index);
             return popedItem;
         }
         public T InsertPopLast(int index, T item)
         {
             T popedItem = this.PopLast();
             this.collection.Insert(index, item);
+            this.UpdateStartIndex(item.length, index);
             return popedItem;
         }
 
@@ -493,6 +500,7 @@ namespace FooEditEngine
 
         public LazyRangeCollection<T> SplitRight()
         {
+            this.CommiteChange();
 
             var lr = Count / 2; // length of right side
             var lrc = 1 + ((Count - 1) / 2); // length of right (ceiling of Length/2)
@@ -507,6 +515,8 @@ namespace FooEditEngine
         }
         public void MergeLeft(LazyRangeCollection<T> right)
         {
+            this.CommiteChange();
+            right.CommiteChange();
             this.collection.AddRange(right);
         }
     }
