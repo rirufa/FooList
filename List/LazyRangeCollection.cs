@@ -434,7 +434,6 @@ namespace FooEditEngine
             if (startRow < 0)
                 return false;
             this.ReplaceRange(startRow, null, 1, 0);
-            this.UpdateStartIndex(0, startRow);
             return true;
         }
 
@@ -445,7 +444,7 @@ namespace FooEditEngine
             int listCount = list.Sum<T>((i) => i.length);
             T removedItem = this.collection[startRow];
             this.ReplaceRange(startRow, list, 1, listCount);
-            this.UpdateStartIndex(listCount, startRow);
+            this.UpdateStartIndex(removedItem.length - listCount, startRow);
             return removedItem;
         }
 
@@ -453,7 +452,6 @@ namespace FooEditEngine
         {
             this.CommiteChange();
             this.collection.Insert(0, item);
-            this.UpdateStartIndex(item.length, 0);
         }
         public void PushLast(T item)
         {
@@ -463,7 +461,6 @@ namespace FooEditEngine
         {
             T item = this.collection[0];
             this.collection.RemoveAt(0);
-            this.UpdateStartIndex(-item.length, 0);
             return item;
         }
 
@@ -478,14 +475,12 @@ namespace FooEditEngine
         {
             T popedItem = this.PopFirst();
             this.collection.Insert(index, item);
-            this.UpdateStartIndex(item.length, index);
             return popedItem;
         }
         public T InsertPopLast(int index, T item)
         {
             T popedItem = this.PopLast();
             this.collection.Insert(index, item);
-            this.UpdateStartIndex(item.length, index);
             return popedItem;
         }
 
