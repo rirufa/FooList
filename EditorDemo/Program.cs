@@ -16,11 +16,14 @@ for(int i = 0; i< 100000; i++)
 }
 sw.Stop();
 Console.WriteLine(String.Format("add time:{0} ms", sw.ElapsedMilliseconds));
+Task.Delay(1000).Wait();
 
 sw = Stopwatch.StartNew();
 buf.ReplaceAll("pen", "cat");
 sw.Stop();
 Console.WriteLine(String.Format("replace time:{0} ms",sw.ElapsedMilliseconds));
+Task.Delay(1000).Wait();
+
 sw = Stopwatch.StartNew();
 buf.ReplaceAll("cat", "ratking");
 sw.Stop();
